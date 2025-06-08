@@ -26,7 +26,7 @@ load_dotenv()
 
 EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASS = os.getenv("EMAIL_PASS")
-MONGO_URL = os.getenv("MONGO_URL")
+
 # Initialize Flask
 app = Flask(__name__)
 CORS(app)
@@ -40,7 +40,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
 
            
 # MongoDB Connection
-client = MongoClient(MONGO_URL)
+client = MongoClient("mongodb+srv://sehandeveloper:GpGeUDiy11QAxqeJ@cluster0.s5hyu.mongodb.net/")
 db = client["chat_app"]
 users_collection = db["users"]
 otp_collection = db["otp_store"]
@@ -499,7 +499,8 @@ def upload_image():
                 'timestamp': datetime.now(timezone.utc),
                 'read': False,
                 'delivered': False,
-                'is_image': True
+                'is_image': True,
+                'temp_id': str(uuid.uuid4())  # Generate a temporary ID for the message
             }
             
             result = messages_collection.insert_one(image_message)
@@ -526,6 +527,8 @@ def upload_image():
         else:
             return jsonify({'error': 'File type not allowed'}), 400
     except Exception as e:
+        import traceback
+        traceback.print_exc() # Print full error traceback to console
         return jsonify({'error': str(e)}), 500
     
 
@@ -876,6 +879,24 @@ def get_connections(user_id):
     print(connection_details)
     
     return jsonify({'connections': connection_details})
+
+""" @app.route('/update-status/<user_id>', methods=['POST'])
+def update_status(user_id):
+    data = request.get_json()
+    online_users[user_id] = {
+        'is_online': data.get('is_online', False),
+        'last_seen': datetime.now(timezone.utc).isoformat(),
+        'sid': None 
+    }
+    return jsonify({'status': 'updated'})
+
+@app.route('/status/<user_id>', methods=['GET'])
+def get_status(user_id):
+    status = online_users.get(user_id, {
+        'is_online': False,
+        'last_seen': datetime.now(timezone.utc).isoformat()
+    })
+    return jsonify(status) """
     
 
 @app.route('/update-status/<user_id>', methods=['POST'])
