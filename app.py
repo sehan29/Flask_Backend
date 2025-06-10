@@ -1859,7 +1859,41 @@ def handle_message_read_group(data):
         'message_id': message_id,
         'reader_id': reader_id
     }, room=group_id)
-    
+
+@socketio.on('messages_deleted')
+def handle_messages_deleted(data):
+    try:
+        user_id = data.get('user_id')
+        receiver_id = data.get('receiver_id')
+        message_ids = data.get('message_ids', [])
+        
+        room = '_'.join(sorted([user_id, receiver_id]))
+        emit('messages_deleted', {
+            'user_id': user_id,
+            'receiver_id': receiver_id,
+            'message_ids': message_ids
+        }, room=room)
+        
+    except Exception as e:
+        print(f"Error handling messages_deleted: {str(e)}")
+        emit('error', {'message': 'Failed to process message deletion'}, room=request.sid)
+
+@socketio.on('group_messages_deleted')
+def handle_group_messages_deleted(data):
+    try:
+        user_id = data.get('user_id')
+        group_id = data.get('group_id')
+        message_ids = data.get('message_ids', [])
+        
+        emit('group_messages_deleted', {
+            'user_id': user_id,
+            'group_id': group_id,
+            'message_ids': message_ids
+        }, room=group_id)
+        
+    except Exception as e:
+        print(f"Error handling group_messages_deleted: {str(e)}")
+        emit('error', {'message': 'Failed to process group message deletion'}, room=request.sid)
 
 @socketio.on('start_call')
 def handle_start_call(data):
